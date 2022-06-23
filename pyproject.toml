@@ -1,0 +1,18 @@
+[project]
+name = "clearsoda"
+version = "0.0.1"
+authors = [
+  { name="Aspirus", email="movxa@protonmail.com" },
+]
+description = "Generate Scratch projects from Python code"
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/xAspirus/clearsoda"
+"Bug Tracker" = "https://github.com/xAspirus/clearsoda/issues"
