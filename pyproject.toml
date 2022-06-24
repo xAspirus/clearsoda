@@ -1,18 +1,20 @@
-[project]
-name = "clearsoda"
-version = "0.0.1"
-authors = [
-  { name="Aspirus", email="movxa@protonmail.com" },
-]
-description = "Generate Scratch projects from Python code"
-readme = "README.md"
-requires-python = ">=3.10"
-classifiers = [
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
-]
+[build-system]
+requires = ["poetry-core>=1.0.4"]
+build-backend = "poetry.core.masonry.api"
 
-[project.urls]
-"Homepage" = "https://github.com/xAspirus/clearsoda"
-"Bug Tracker" = "https://github.com/xAspirus/clearsoda/issues"
+[tool.poetry]
+name = "clearsoda"
+version = "0.0.2"
+description = "Library to generate scratch projects using object-oriented relations."
+authors = ["xAspirus <movxa@protonmail.com>"]
+maintainers = ["xAspirus <movxa@protonmail.com>"]
+homepage = "https://github.com/xAspirus/clearsoda"
+repository = "https://github.com/xAspirus/clearsoda"
+documentation = "https://github.com/xAspirus/clearsoda"
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "License :: OSI Approved :: MIT License",
+]
+include = ["LICENSE", "README.md", "clearsoda/py.typed"]
+readme = "README.md"
+license = "MIT"

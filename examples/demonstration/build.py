@@ -1,7 +1,3 @@
-import sys
-
-sys.path.append("../..")
-
 from clearsoda import *
 
 from main import sprite as main_sprite
