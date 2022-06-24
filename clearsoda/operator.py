@@ -3,22 +3,22 @@ from .codeprimitives import *
 
 class Add(ReporterBlock):
     def __init__(self, left: InputType, right: InputType):
-        self.define("operator_add", inputs={"OPERAND1": left, "OPERAND2": right})
+        self.define("operator_add", inputs={"NUM1": left, "NUM2": right})
 
 
 class Sub(ReporterBlock):
     def __init__(self, left: InputType, right: InputType):
-        self.define("operator_subtract", inputs={"OPERAND1": left, "OPERAND2": right})
+        self.define("operator_subtract", inputs={"NUM1": left, "NUM2": right})
 
 
 class Mul(ReporterBlock):
     def __init__(self, left: InputType, right: InputType):
-        self.define("operator_multiply", inputs={"OPERAND1": left, "OPERAND2": right})
+        self.define("operator_multiply", inputs={"NUM1": left, "NUM2": right})
 
 
 class Div(ReporterBlock):
     def __init__(self, left: InputType, right: InputType):
-        self.define("operator_divide", inputs={"OPERAND1": left, "OPERAND2": right})
+        self.define("operator_divide", inputs={"NUM1": left, "NUM2": right})
 
 
 class Random(ReporterBlock):

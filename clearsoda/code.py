@@ -1,6 +1,8 @@
 from .codeprimitives import *
-from .motion import *
 from .looks import *
+from .motion import *
+from .operator import *
+from .sensing import *
 from .sound import *
 
 
@@ -77,3 +79,35 @@ def StopThisScript():
 
 def StopOtherScriptsInSprite():
     return Stop("other scripts in sprite")
+
+
+class If(StatementBlock):
+    def __init__(self, condition: InputType):
+        self.define("control_if", inputs={"CONDITION": condition})
+
+    def __call__(self, *if_stack):
+        self.inputs["SUBSTACK"] = StatementStack(if_stack)
+        return self
+
+    def Else(self, *else_stack):
+        self.opcode = "control_if_else"
+        self.inputs["SUBSTACK2"] = StatementStack(else_stack)
+        return self
+
+
+class Until(StatementBlock):
+    def __init__(self, condition: InputType):
+        self.define("control_repeat_until", inputs={"CONDITION": condition})
+
+    def __call__(self, *stack):
+        self.inputs["SUBSTACK"] = StatementStack(stack)
+        return self
+
+
+class Repeat(StatementBlock):
+    def __init__(self, times: InputType):
+        self.define("control_repeat", inputs={"TIMES": times})
+
+    def __call__(self, *stack):
+        self.inputs["SUBSTACK"] = StatementStack(stack)
+        return self

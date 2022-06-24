@@ -1,4 +1,5 @@
 from typing import Union
+from . import code
 
 
 def serialize_block_inputs(inputs):
@@ -89,6 +90,27 @@ class ReporterBlock(Block):
             ],
         ]
 
+    def __eq__(self, o):
+        return code.Eq(self, o)
+
+    def __lt__(self, o):
+        return code.Lt(self, o)
+
+    def __gt__(self, o):
+        return code.Gt(self, o)
+
+    def __add__(self, o):
+        return code.Add(self, o)
+
+    def __sub__(self, o):
+        return code.Sub(self, o)
+
+    def __mul__(self, o):
+        return code.Mul(self, o)
+
+    def __truediv__(self, o):
+        return code.Div(self, o)
+
 
 InputType = Union[ReporterBlock, "Var", str, int, float, bool]
 
@@ -131,11 +153,38 @@ class Var:
     def __init__(self, name: str):
         self.name: str = name
 
+    def __eq__(self, o):
+        return code.Eq(self, o)
+
+    def __lt__(self, o):
+        return code.Lt(self, o)
+
+    def __gt__(self, o):
+        return code.Gt(self, o)
+
+    def __add__(self, o):
+        return code.Add(self, o)
+
+    def __sub__(self, o):
+        return code.Sub(self, o)
+
+    def __mul__(self, o):
+        return code.Mul(self, o)
+
+    def __truediv__(self, o):
+        return code.Div(self, o)
+
     def change(self, change: InputType):
         return ChangeVariable(self.name, change)
 
     def set(self, value: InputType):
         return SetVariable(self.name, value)
+
+    def __le__(self, o):
+        return self.set(o)
+
+    def __ge__(self, o):
+        return self.change(o)
 
     def show(self):
         return ShowVariable(self.name)
@@ -145,3 +194,8 @@ class Var:
 
     def serialize(self, parent_id):
         return []
+
+
+class List:
+    def __init__(self, name: str):
+        raise NotImplementedError

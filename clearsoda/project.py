@@ -1,5 +1,6 @@
 import json
 import zipfile
+from . import code as scratchcode
 
 from .helpers import *
 
@@ -8,20 +9,24 @@ class Sprite:
     def __init__(
         self,
         name: str,
-        variables: list[str] = [],
-        lists: list[str] = [],
+        variables: list[scratchcode.Var] = [],
+        lists: list[scratchcode.List] = [],
         costumes: list[str] = [],
         sounds: list[str] = [],
     ):
         self.name: str = name
-        self.variables: list[str] = variables
-        self.lists: list[str] = lists
+        self.variables: list[scratchcode.Var] = variables
+        self.lists: list[scratchcode.List] = lists
         self.costumes: list[str] = costumes
         self.sounds: list[str] = sounds
         self.code: list = []
 
     def Code(self, *code):
         self.code: list = code
+        return self
+
+    def WhenFlagClicked(self, *code):
+        self.code.append(scratchcode.WhenFlagClicked(*code))
         return self
 
     def serialize_costumes(self):
@@ -42,10 +47,10 @@ class Sprite:
         }
 
     def serialize_variables(self):
-        return {var: [var, 0] for var in self.variables}
+        return {var.name: [var.name, 0] for var in self.variables}
 
     def serialize_lists(self):
-        return {var: [var, []] for var in self.lists}
+        return {var.name: [var.name, []] for var in self.lists}
 
     def serialize_sounds(self):
         return []  # TODO
