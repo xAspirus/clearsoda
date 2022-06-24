@@ -1,1 +1,2 @@
-from .scratchproject import Project
+from .code import *
+from .project import *
