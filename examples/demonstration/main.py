@@ -1,14 +1,19 @@
 from clearsoda import *
 
-a = Var("a")
-b = Var("b")
+Self = Sprite(
+    name=__name__,
+    costumes=["assets/blank.svg"],
+)
 
-sprite = Sprite(
-    name=__name__, costumes=["assets/scratchcat.svg"], variables=[a, b]
-).WhenFlagClicked(
-    a <= 0,
-    Repeat(10) (
-        SayFor(a, 0.24),
-        a >= 1,
+my_function = Self.Def(
+    Func(Arg.arg1, Arg.arg2, Arg.arg3)(
+        Say(Arg.arg1),
+        Say(Arg.arg2),
+        Say(Arg.arg3),
     )
+)
+
+Self.WhenFlagClicked(
+    Say("Hello, World!"),
+    my_function(1, 2, 3),
 )

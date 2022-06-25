@@ -1,5 +1,6 @@
 from typing import Union
 from . import code
+import json
 
 
 def serialize_block_inputs(inputs):
@@ -7,13 +8,45 @@ def serialize_block_inputs(inputs):
     for input_name, input_value in inputs.items():
         if isinstance(input_value, ReporterBlock):
             ret[input_name] = [3, str(id(input_value))]
+        elif isinstance(input_value, ProcedurePrototype):
+            ret[input_name] = [1, str(id(input_value))]
         elif isinstance(input_value, StatementStack):
             ret[input_name] = [2, str(id(input_value.stack[0]))]
         elif isinstance(input_value, Var):
-            ret[input_name] = [3, [12, input_value.name, input_value.name]]
+            ret[input_name] = [3, [12, input_value.name, str(id(input_value))]]
         elif isinstance(input_value, (str, int, float, bool)):
             ret[input_name] = [1, [10, str(input_value)]]
     return ret
+
+
+class HatBlock:
+    def define(self, opcode, inputs, fields):
+        self.opcode = opcode
+        self.inputs = inputs
+        self.fields = fields
+
+    def __call__(self, *stack):
+        self.stack = StatementStack(stack)
+        return self
+
+    def serialize(self):
+        return [
+            {
+                "id": str(id(self)),
+                "opcode": self.opcode,
+                "next": str(id(self.stack.stack[0]))
+                if len(self.stack.stack) > 0
+                else None,
+                "parent": None,
+                "inputs": serialize_block_inputs(self.inputs),
+                "fields": self.fields,
+                "shadow": False,
+                "topLevel": True,
+                "x": 0,
+                "y": 0,
+            },
+            self.stack.serialize(str(id(self))),
+        ]
 
 
 class Block:
@@ -115,43 +148,9 @@ class ReporterBlock(Block):
 InputType = Union[ReporterBlock, "Var", str, int, float, bool]
 
 
-class SetVariable(StatementBlock):
-    def __init__(self, variable: str, value: InputType):
-        self.define(
-            "data_setvariableto",
-            inputs={"VALUE": value},
-            fields={"VARIABLE": [variable, variable]},
-        )
-
-
-class ChangeVariable(StatementBlock):
-    def __init__(self, variable: str, change: InputType):
-        self.define(
-            "data_changevariableby",
-            inputs={"VALUE": change},
-            fields={"VARIABLE": [variable, variable]},
-        )
-
-
-class ShowVariable(StatementBlock):
-    def __init__(self, variable: str):
-        self.define(
-            "data_showvariable",
-            fields={"VARIABLE": [variable, variable]},
-        )
-
-
-class HideVariable(StatementBlock):
-    def __init__(self, variable: str):
-        self.define(
-            "data_hidevariable",
-            fields={"VARIABLE": [variable, variable]},
-        )
-
-
 class Var:
-    def __init__(self, name: str):
-        self.name: str = name
+    def __init__(self, name: str = None):
+        self.name: str = str(id(self)) if name is None else name
 
     def __eq__(self, o):
         return code.Eq(self, o)
@@ -175,10 +174,10 @@ class Var:
         return code.Div(self, o)
 
     def change(self, change: InputType):
-        return ChangeVariable(self.name, change)
+        return ChangeVariable(self, change)
 
     def set(self, value: InputType):
-        return SetVariable(self.name, value)
+        return SetVariable(self, value)
 
     def __le__(self, o):
         return self.set(o)
@@ -187,15 +186,259 @@ class Var:
         return self.change(o)
 
     def show(self):
-        return ShowVariable(self.name)
+        return ShowVariable(self)
 
     def hide(self):
-        return HideVariable(self.name)
+        return HideVariable(self)
 
     def serialize(self, parent_id):
         return []
 
+    def field(self):
+        return [self.name, str(id(self))]
+
+
+class SetVariable(StatementBlock):
+    def __init__(self, variable: Var, value: InputType):
+        self.define(
+            "data_setvariableto",
+            inputs={"VALUE": value},
+            fields={"VARIABLE": variable.field()},
+        )
+
+
+class ChangeVariable(StatementBlock):
+    def __init__(self, variable: Var, change: InputType):
+        self.define(
+            "data_changevariableby",
+            inputs={"VALUE": change},
+            fields={"VARIABLE": variable.field()},
+        )
+
+
+class ShowVariable(StatementBlock):
+    def __init__(self, variable: Var):
+        self.define(
+            "data_showvariable",
+            fields={"VARIABLE": variable.field()},
+        )
+
+
+class HideVariable(StatementBlock):
+    def __init__(self, variable: Var):
+        self.define(
+            "data_hidevariable",
+            fields={"VARIABLE": variable.field()},
+        )
+
 
 class List:
+    def __init__(self, name: str = None):
+        self.name = str(id(self)) if name is None else name
+
+    def field(self):
+        return [self.name, str(id(self))]
+
+    def add(self, item: InputType):
+        return AddToList(self, item)
+
+    def delete(self, index: InputType):
+        return DeleteOfList(self, index)
+
+    def delete_all(self):
+        return DeleteAllOfList(self)
+
+    def insert(self, index: InputType, item: InputType):
+        return InsertAtList(self, index, item)
+
+    def replace(self, index: InputType, item: InputType):
+        return ReplaceItemOfList(self, index, item)
+
+    def show(self):
+        return ShowList(self)
+
+    def hide(self):
+        return HideList(self)
+
+    def __getitem__(self, index):
+        return ItemOfList(self, index)
+
+    def index(self, item: InputType):
+        return IndexOfList(self, item)
+
+    def length(self):
+        return LengthOfList(self)
+
+    def contains(self, item: InputType):
+        return ListContainsItem(self, item)
+
+
+class AddToList(StatementBlock):
+    def __init__(self, list_: List, item: InputType):
+        self.define(
+            "data_addtolist",
+            inputs={"ITEM": item},
+            fields={"LIST": list_.field()},
+        )
+
+
+class DeleteOfList(StatementBlock):
+    def __init__(self, list_: List, index: InputType):
+        self.define(
+            "data_deleteoflist", inputs={"INDEX": index}, fields={"LIST": list_.field()}
+        )
+
+
+class DeleteAllOfList(StatementBlock):
+    def __init__(self, list_: List):
+        self.define("data_deletealloflist", fields={"LIST": list_.field()})
+
+
+class InsertAtList(StatementBlock):
+    def __init__(self, list_: List, index: InputType, item: InputType):
+        self.define(
+            "data_deleteoflist",
+            inputs={"INDEX": index, "ITEM": item},
+            fields={"LIST": list_.field()},
+        )
+
+
+class ReplaceItemOfList(StatementBlock):
+    def __init__(self, list_: List, index: InputType, item: InputType):
+        self.define(
+            "data_replaceitemoflist",
+            inputs={"INDEX": index, "ITEM": item},
+            fields={"LIST": list_.field()},
+        )
+
+
+class ShowList(StatementBlock):
+    def __init__(self, list_: List):
+        self.define("data_showlist", fields={"LIST": list_.field()})
+
+
+class HideList(StatementBlock):
+    def __init__(self, list_: List):
+        self.define("data_hidelist", fields={"LIST": list_.field()})
+
+
+class ItemOfList(ReporterBlock):
+    def __init__(self, list_: List, index: InputType):
+        self.define(
+            "data_itemoflist", inputs={"INDEX": index}, fields={"LIST": list_.field()}
+        )
+
+
+class IndexOfList(ReporterBlock):
+    def __init__(self, list_: List, item: InputType):
+        self.define(
+            "data_itemnumoflist", inputs={"ITEM": item}, fields={"LIST": list_.field()}
+        )
+
+
+class LengthOfList(ReporterBlock):
+    def __init__(self, list_: List):
+        self.define("data_lengthoflist", fields={"LIST": list_.field()})
+
+
+class ListContainsItem(ReporterBlock):
+    def __init__(self, list_: List, item: InputType):
+        self.define(
+            "data_listcontainsitem",
+            inputs={"ITEM": item},
+            fields={"LIST": list_.field()},
+        )
+
+
+class ArgReporter(ReporterBlock):
     def __init__(self, name: str):
-        raise NotImplementedError
+        self.name = name
+        self.define("argument_reporter_string_number", fields={"VALUE": [name, None]})
+
+
+class ArgFactory:
+    def __getattribute__(self, name):
+        return ArgReporter(name)
+
+
+Arg = ArgFactory()
+
+
+class ProcedurePrototype:
+    def __init__(self, prococde: str, args: list[str]):
+        self.proccode = prococde
+        self.args = args
+
+    def serialize(self):
+        return {
+            "id": str(id(self)),
+            "opcode": "procedures_prototype",
+            "next": None,
+            "parent": None,
+            "inputs": {
+                "ArgReporter:" + argname: [1, "ArgReporter:" + argname]
+                for argname in self.args
+            },
+            "fields": {},
+            "topLevel": False,
+            "mutation": {
+                "tagName": "mutation",
+                "children": [],
+                "proccode": self.proccode,
+                "argumentids": json.dumps(
+                    ["ArgReporter:" + argname for argname in self.args]
+                ),
+                "argumentnames": json.dumps(self.args),
+                "argumentdefaults": json.dumps(self.args),
+                "warp": "true",
+            },
+        }
+
+
+class ProcedureDefinition(HatBlock):
+    def __init__(self, prototype: ProcedurePrototype):
+        self.define(
+            "procedures_definition", inputs={"custom_block": prototype}, fields={}
+        )
+
+
+class ProcedureCall(StatementBlock):
+    def __init__(self, prototype: ProcedurePrototype, args: list[InputType]):
+        self.prototype = prototype
+        self.define(
+            "procedures_call",
+            inputs={
+                "ArgReporter:" + argname: args[i]
+                for i, argname in enumerate(prototype.args)
+            },
+        )
+
+    def serialize(self, next_id, parent_id):
+        ret = super().serialize(next_id, parent_id)
+        ret[0]["mutation"] = {
+            "tagName": "mutation",
+            "children": [],
+            "proccode": self.prototype.proccode,
+            "argumentids": json.dumps(
+                ["ArgReporter:" + argname for argname in self.prototype.args]
+            ),
+            "warp": "true",
+        }
+        return ret
+
+
+def Function(name, args, stack):
+    proccode = name + " " + " ".join(["%s"] * len(args))
+    prototype = ProcedurePrototype(proccode, [arg.name for arg in args])
+    define = ProcedureDefinition(prototype)(*stack)
+    call = lambda *args: ProcedureCall(prototype, args)
+    return prototype, define, call
+
+
+class Func:
+    def __init__(self, *args, name=None):
+        self.name = str(id(self)) if name is None else name
+        self.args = args
+
+    def __call__(self, *stack):
+        return Function(self.name, self.args, stack)

@@ -4,30 +4,55 @@ from .motion import *
 from .operator import *
 from .sensing import *
 from .sound import *
+from .pen import *
 
 
-class WhenFlagClicked:
+class WhenFlagClicked(HatBlock):
     def __init__(self, *stack):
-        self.stack = StatementStack(stack)
+        self.define("event_whenflagclicked", {}, {})
+        self(*stack)
 
-    def serialize(self):
-        return [
-            {
-                "id": str(id(self)),
-                "opcode": "event_whenflagclicked",
-                "next": str(id(self.stack.stack[0]))
-                if len(self.stack.stack) > 0
-                else None,
-                "parent": None,
-                "inputs": {},
-                "fields": {},
-                "shadow": False,
-                "topLevel": True,
-                "x": 0,
-                "y": 0,
-            },
-            self.stack.serialize(str(id(self))),
-        ]
+
+class WhenKeyPressed(HatBlock):
+    def __init__(self, key: str):
+        self.define("event_whenkeypressed", {}, {"KEY_OPTION": [key, None]})
+
+
+class WhenThisSpriteClicked(HatBlock):
+    def __init__(self, *stack):
+        self.define("event_whenthisspriteclicked", {}, {})
+        self(*stack)
+
+
+class WhenBackdropSwitchesTo(HatBlock):
+    def __init__(self, backdrop: str):
+        self.define("event_whenbackdropswitchesto", {}, {"BACKDROP": [backdrop, None]})
+
+
+class WhenGreaterThan(HatBlock):
+    def __init__(self, menu: str, value: InputType):
+        self.define(
+            "event_whengreaterthan",
+            inputs={"VALUE": value},
+            fields={"WHENGREATERTHANMENU": [menu, None]},
+        )
+
+
+def WhenLoudnessGreaterThan(loudness: InputType):
+    return WhenGreaterThan("LOUDNESS", loudness)
+
+
+def WhenTimerGreaterThan(time: InputType):
+    return WhenGreaterThan("TIMER", time)
+
+
+class WhenRecieved(HatBlock):
+    def __init__(self, event: str, value: InputType):
+        self.define(
+            "event_whenbroadcastrecieved",
+            inputs={},
+            fields={"BROADCAST_OPTION": [event, event]},
+        )
 
 
 class Broadcast(StatementBlock):
@@ -77,7 +102,7 @@ def StopThisScript():
     return Stop("this script")
 
 
-def StopOtherScriptsInSprite():
+def StopOtherScripts():
     return Stop("other scripts in sprite")
 
 
@@ -111,3 +136,8 @@ class Repeat(StatementBlock):
     def __call__(self, *stack):
         self.inputs["SUBSTACK"] = StatementStack(stack)
         return self
+
+
+class Forever(StatementBlock):
+    def __init__(self, *stack):
+        self.define("control_forever", inputs={"SUBSTACK": StatementStack(stack)})

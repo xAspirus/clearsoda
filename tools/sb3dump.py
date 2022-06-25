@@ -10,4 +10,4 @@ project_json = json.loads(project_file.read("project.json"))
 
 blocks = project_json["targets"][1]["blocks"]
 
-print(project_json)
+print(blocks)
