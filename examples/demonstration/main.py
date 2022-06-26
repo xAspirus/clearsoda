@@ -5,15 +5,13 @@ Self = Sprite(
     costumes=["assets/blank.svg"],
 )
 
-my_function = Self.Def(
-    Func(Arg.arg1, Arg.arg2, Arg.arg3)(
-        Say(Arg.arg1),
-        Say(Arg.arg2),
-        Say(Arg.arg3),
-    )
-)
+variable = Self.Var("variable")
 
 Self.WhenFlagClicked(
-    Say("Hello, World!"),
-    my_function(1, 2, 3),
+    If (variable) (
+        Say("True"),
+    )
+    .Else (
+        Say("False"),
+    )
 )

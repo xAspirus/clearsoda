@@ -71,7 +71,7 @@ class Wait(StatementBlock):
 
 
 class WaitUntil(StatementBlock):
-    def __init__(self, condition: InputType):
+    def __init__(self, condition: BooleanType):
         self.define("control_wait_until", inputs={"CONDITION": condition})
 
 
@@ -107,7 +107,7 @@ def StopOtherScripts():
 
 
 class If(StatementBlock):
-    def __init__(self, condition: InputType):
+    def __init__(self, condition: BooleanType):
         self.define("control_if", inputs={"CONDITION": condition})
 
     def __call__(self, *if_stack):
@@ -121,7 +121,7 @@ class If(StatementBlock):
 
 
 class Until(StatementBlock):
-    def __init__(self, condition: InputType):
+    def __init__(self, condition: BooleanType):
         self.define("control_repeat_until", inputs={"CONDITION": condition})
 
     def __call__(self, *stack):
@@ -141,3 +141,4 @@ class Repeat(StatementBlock):
 class Forever(StatementBlock):
     def __init__(self, *stack):
         self.define("control_forever", inputs={"SUBSTACK": StatementStack(stack)})
+

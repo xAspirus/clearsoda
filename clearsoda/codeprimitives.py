@@ -146,6 +146,15 @@ class ReporterBlock(Block):
 
 
 InputType = Union[ReporterBlock, "Var", str, int, float, bool]
+BooleanType = Union[
+    "code.Not",
+    "code.Eq",
+    "code.Gt",
+    "code.Lt",
+    "code.ListContainsItem",
+    "code.ColorTouchingColor",
+    "code.Touching",
+]
 
 
 class Var:
